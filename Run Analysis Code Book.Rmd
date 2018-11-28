@@ -1,0 +1,99 @@
+---
+title: "GetCleanDataAssigment Codebook"
+author: "Me"
+date: '2018-11-28'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Data Set Information:
+
+The experiments have been carried out with a group of 30 volunteers within an age bracket of 19-48 years. Each person performed six activities (WALKING, WALKING_UPSTAIRS, WALKING_DOWNSTAIRS, SITTING, STANDING, LAYING) wearing a smartphone (Samsung Galaxy S II) on the waist. Using its embedded accelerometer and gyroscope, we captured 3-axial linear acceleration and 3-axial angular velocity at a constant rate of 50Hz. The experiments have been video-recorded to label the data manually. The obtained dataset has been randomly partitioned into two sets, where 70% of the volunteers was selected for generating the training data and 30% the test data. 
+
+The sensor signals (accelerometer and gyroscope) were pre-processed by applying noise filters and then sampled in fixed-width sliding windows of 2.56 sec and 50% overlap (128 readings/window). The sensor acceleration signal, which has gravitational and body motion components, was separated using a Butterworth low-pass filter into body acceleration and gravity. The gravitational force is assumed to have only low frequency components, therefore a filter with 0.3 Hz cutoff frequency was used. From each window, a vector of features was obtained by calculating variables from the time and frequency domain.
+
+The test and train data sets were merged into one data set. Only the mean and standard deviation were extracted, and the data was given tidy data principles:
+
+1. Each variable forms a column.
+2. Each observation forms a row.
+3. Each type of observational unit forms a table.
+
+A tidy data set was created with the average of each variable for each activity, for each subject.
+
+Intertial signals from the test and train data set were not used because they were not relevant to the analysis.
+
+```{r cars}
+run_analysis <- function (x) {
+  
+  #Load in training data sets
+  
+  subjectrain <- read.table("subject_train.txt")
+  trainset <- read.table("X_train.txt")
+  trainlabel <- read.table("y_train.txt")
+  
+  #Load in test data sets
+  
+  subjectest <- read.table("subject_test.txt")
+  testset <- read.table("X_test.txt")
+  testlabel <- read.table("y_test.txt")
+  
+  #Load in activity labels and put in descriptive columns
+  
+  activitylabels <- read.table("activity_labels.txt")
+  actname <- c("Key","ActivityLabel")
+  colnames(activitylabels) <- actname
+  
+  #Adhere to tidy data by putting a descriptive name for column headers of subject ID data set and activity data set
+  colnames(subjectrain)[1] <- "SubjectID"
+  colnames(subjectest)[1] <- "SubjectID"
+  colnames(trainlabel)[1] <- "Activity"
+  colnames(testlabel)[1] <- "Activity"
+  
+  #Adhere to tidy data by putting a descriptive name for column header of combined data set
+  
+  features <- read.table("features.txt")
+  featuresvec <- as.character(features[,2])
+  colnames(testset) <- featuresvec
+  colnames(trainset) <- featuresvec
+  
+  #Bind Activities and subject IDs to the test and training sets
+  
+  trainset <- data.frame(subjectrain, trainlabel, trainset)
+  testset <- data.frame(subjectest, testlabel, testset)
+  
+  #Bind test and training data
+  combinedset <- rbind(testset,trainset)
+  
+  #Select only columns with "mean" and "std"
+  patterns <- c("mean","std")
+  parsedcombined <- combinedset[,c(1,2,grep(paste(patterns, collapse="|"),names(combinedset)))]
+  
+  #Replace activity label key with activity labels in combined dataset
+  
+  parsedcombined$Activity <- activitylabels$ActivityLabel[parsedcombined$Activity]
+  
+  #Make column names more readable; remove abbreviations
+  
+  colnames(parsedcombined) <- sub("tBody", "timeBody", colnames(parsedcombined))
+  colnames(parsedcombined) <- sub("fBody", "frequencyBody", colnames(parsedcombined))
+  colnames(parsedcombined) <- sub("Mag", "Magnitude", colnames(parsedcombined))
+  colnames(parsedcombined) <- sub("Acc", "Accelerometer", colnames(parsedcombined))
+  
+  #Arrange by activity
+  
+  parsedcombined <- arrange(parsedcombined, Activity)
+  
+  #Group by Subject ID and Activity, then get the mean of each activity for each subject
+  
+  tidyset <- parsedcombined %>% group_by(SubjectID, Activity)
+  tidyset2 <- tidyset %>% summarise_at(3:81,mean)
+  
+}
+```
+
+
