@@ -61,6 +61,7 @@ run_analysis <- function (x) {
   #Group by Subject ID and Activity, then get the mean of each activity for each subject
   
   tidyset <- parsedcombined %>% group_by(SubjectID, Activity)
-  tidyset %>% summarise_at(3:81,mean)
+  tidyset <- tidyset %>% summarise_at(3:81,mean)
+  write.table(tidyset, file ="tidyset.txt")
   
 }

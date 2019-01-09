@@ -1,5 +1,7 @@
 # GetCleanDataAssignment
 
+This bit of R code cleans the data so that we can see extract the mean and standard deviation of each measurement from both the test and training sets. There is also a clean up exercise where the labels are put into more readable format. The resulting cleaning and merging is put into one tidy data set.
+
 For each record it is provided:
 ======================================
 
